@@ -1,0 +1,68 @@
+name: uroboros CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  quality-gate:
+    name: Code Quality & Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. Checkout Code
+      - uses: actions/checkout@v4
+
+      # 2. Setup Python 3.11
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 3. Install Poetry
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      # 4. Cache Dependencies (Speeds up CI significantly)
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      # 5. Install Dependencies (if cache miss)
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      # 6. Install Project
+      - name: Install library
+        run: poetry install --no-interaction
+
+      # 7. Run Linter (Ruff)
+      - name: Run Ruff (Linting)
+        run: |
+          source .venv/bin/activate
+          # Check for errors
+          ruff check .
+          # Check formatting
+          ruff format --check .
+
+      # 8. Run Type Checker (Mypy)
+      - name: Run Mypy (Static Typing)
+        run: |
+          source .venv/bin/activate
+          mypy src
+
+      # 9. Run Unit Tests
+      - name: Run Unit Tests
+        run: |
+          source .venv/bin/activate
+          # We skip integration tests that might require real API keys
+          pytest tests/unit

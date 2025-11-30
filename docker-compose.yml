@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  uroboros:
+    container_name: uroboros_agent
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    # Mount the data directory to persist the Vector DB (Memory)
+    volumes:
+      - ./data:/app/data
+      
+    # Load environment variables from .env file
+    env_file:
+      - .env
+    
+    # Restart automatically if it crashes (unless we stopped it manually)
+    restart: unless-stopped
+    
+    # Healthcheck to ensure the process is running
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "uroboros.main"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    # Resource limits (optional, but good for safety)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G

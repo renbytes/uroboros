@@ -1,0 +1,71 @@
+[tool.poetry]
+name = "uroboros-agent"
+version = "0.1.0"
+description = "Adversarial Co-Evolutionary Software Agent"
+authors = ["uroboros Team <arch@uroboros.ai>"]
+readme = "README.md"
+packages = [{include = "uroboros", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pydantic = "^2.6.0"
+pydantic-settings = "^2.2.0"
+openai = "^1.12.0"
+tenacity = "^8.2.0"
+e2b-code-interpreter = "^1.0.0"  # Sandbox Infrastructure
+chromadb = "^0.4.22" # Vector Database for Memory
+tiktoken = "^0.6.0" # Token counting (dependency of OpenAI/Chroma)
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+pytest-asyncio = "^0.23.0"
+ruff = "^0.2.0"
+mypy = "^1.8.0"
+types-requests = "^2.31.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+# --- Tool Configuration: Ruff (Linter & Formatter) ---
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort (imports)
+    "B",  # flake8-bugbear
+    "UP", # pyupgrade
+    "N",  # pep8-naming
+]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# --- Tool Configuration: Mypy (Static Typing) ---
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+warn_return_any = true
+warn_unused_ignores = true
+
+# --- Tool Configuration: Pytest ---
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --asyncio-mode=auto"
+testpaths = [
+    "tests",
+]
+pythonpath = [
+    "src"
+]
