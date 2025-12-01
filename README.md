@@ -1,11 +1,15 @@
 # Uroboros: Adversarial Co-Evolutionary Software Agent
 
+![logo](logo.jpg)
+
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
 [![Poetry](https://img.shields.io/badge/poetry-managed-blueviolet)](https://python-poetry.org/)
 [![E2B](https://img.shields.io/badge/sandbox-E2B-orange)](https://e2b.dev/)
 [![Docker](https://img.shields.io/badge/container-docker-blue)](https://www.docker.com/)
 
 **Uroboros** is an autonomous software engineering system capable of recursive self-improvement. It implements the "Adversarial Co-Evolution" paradigm, where a **Builder Agent** (Actor) and a **Tester Agent** (Adversary) compete in an infinite loop to generate robust, verified code.
+
+> [Uroboros](https://en.wikipedia.org/wiki/Ouroboros) is an ancient image of a snake eating itself, representing the core behavior of this system: code that writes itself, and critiques itself in a recursive loop.
 
 ## 🧠 Core Architecture
 
@@ -21,8 +25,8 @@ The system operates on the **Uroboros Loop**:
 ### Prerequisites
 
 * **Python 3.11+**
-* **Poetry** (Dependency Manager)
-* **Docker** (Optional, for containerized runs)
+* **[Poetry](https://github.com/python-poetry/poetry)** (Dependency Manager)
+* **[Docker](https://www.docker.com/)** (Optional, for containerized runs)
 * **API Keys:** [OpenAI](https://openai.com/api/) (`gpt-5-mini` recommended) and [E2B](https://github.com/e2b-dev/E2B).
 
 ### 1. Installation
