@@ -1,15 +1,15 @@
-# Ouroboros: Adversarial Co-Evolutionary Software Agent
+# Uroboros: Adversarial Co-Evolutionary Software Agent
 
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
 [![Poetry](https://img.shields.io/badge/poetry-managed-blueviolet)](https://python-poetry.org/)
 [![E2B](https://img.shields.io/badge/sandbox-E2B-orange)](https://e2b.dev/)
 [![Docker](https://img.shields.io/badge/container-docker-blue)](https://www.docker.com/)
 
-**Ouroboros** is an autonomous software engineering system capable of recursive self-improvement. It implements the "Adversarial Co-Evolution" paradigm, where a **Builder Agent** (Actor) and a **Tester Agent** (Adversary) compete in an infinite loop to generate robust, verified code.
+**Uroboros** is an autonomous software engineering system capable of recursive self-improvement. It implements the "Adversarial Co-Evolution" paradigm, where a **Builder Agent** (Actor) and a **Tester Agent** (Adversary) compete in an infinite loop to generate robust, verified code.
 
 ## 🧠 Core Architecture
 
-The system operates on the **Ouroboros Loop**:
+The system operates on the **Uroboros Loop**:
 
 1. **Actor (The Builder):** Generates code solutions and tools. It uses **Voyager-style Memory** (Vector DB) to retrieve past skills and avoid repeating mistakes.
 2. **Adversary (The Critic):** Generates "Killer Tests" designed to break the Actor's code. It targets edge cases, boundary conditions, and logic flaws.
