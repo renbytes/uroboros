@@ -1,3 +1,3 @@
-from uroboros.actor.agent import uroborosActor
+from uroboros.actor.agent import UroborosActor
 
-__all__ = ["uroborosActor"]
+__all__ = ["UroborosActor"]

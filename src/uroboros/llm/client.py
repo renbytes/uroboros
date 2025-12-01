@@ -36,6 +36,23 @@ class LLMClient:
         self.model = model_name or settings.ACTOR_MODEL
         self.logger = logger
 
+    def _get_model_params(self, temperature: float) -> dict:
+        """
+        Helper to sanitize parameters based on model capabilities.
+        Reasoning models (o1, gpt-5) do not support 'temperature'.
+        """
+        params = {}
+        # Heuristic: Check for known reasoning model prefixes
+        # This list can be expanded as new models release
+        is_reasoning_model = any(x in self.model for x in ["o1-", "gpt-5", "o3-"])
+        
+        if not is_reasoning_model:
+            params["temperature"] = temperature
+        else:
+            self.logger.debug(f"Omitting temperature for reasoning model: {self.model}")
+            
+        return params
+
     @retry(
         retry=retry_if_exception_type((RateLimitError, APIError)),
         wait=wait_exponential(multiplier=1, min=4, max=60),
@@ -50,17 +67,12 @@ class LLMClient:
     ) -> str:
         """
         Standard text completion.
-        
-        Args:
-            system_prompt: The persona/instructions (e.g. "You are a Senior Engineer...")
-            user_prompt: The specific task input.
-            temperature: Creativity (0.0 for code, 0.7 for creative writing).
-            
-        Returns:
-            The raw string response content.
         """
-        self.logger.debug(f"Sending request to {self.model} (Temp: {temperature})")
+        self.logger.debug(f"Sending request to {self.model}")
         
+        # Get sanitized params
+        kwargs = self._get_model_params(temperature)
+
         try:
             response = await self.client.chat.completions.create(
                 model=self.model,
@@ -68,7 +80,7 @@ class LLMClient:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                temperature=temperature
+                **kwargs
             )
             content = response.choices[0].message.content
             if content is None:
@@ -94,15 +106,11 @@ class LLMClient:
     ) -> T:
         """
         Structured completion that guarantees a Pydantic object response.
-        Uses OpenAI's 'response_format' (beta) for strict schema adherence.
-        
-        Args:
-            response_model: The Pydantic class to parse the response into.
-            
-        Returns:
-            Instance of response_model populated with LLM data.
         """
         self.logger.debug(f"Sending structured request to {self.model} -> {response_model.__name__}")
+
+        # Get sanitized params
+        kwargs = self._get_model_params(temperature)
 
         try:
             response = await self.client.beta.chat.completions.parse(
@@ -112,14 +120,12 @@ class LLMClient:
                     {"role": "user", "content": user_prompt}
                 ],
                 response_format=response_model,
-                temperature=temperature
+                **kwargs
             )
             
             parsed_object = response.choices[0].message.parsed
             
             if parsed_object is None:
-                # Fallback: Sometimes refusal or strict content policy triggers None
-                # In a real system, we might retry or raise a specific error
                 raise ValueError(f"LLM failed to parse into {response_model.__name__}")
                 
             return parsed_object
