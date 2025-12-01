@@ -5,9 +5,9 @@ import sys
 from typing import Optional
 
 from uroboros.core.config import get_settings
-from uroboros.core.utils import setup_logger, timer
-from uroboros.core.types import Task, TaskStatus, TestStatus, Skill
-from uroboros.actor.agent import uroborosActor
+from uroboros.core.utils import setup_logger, timer, save_debug_artifact, clean_code_block
+from uroboros.core.types import Task, TaskStatus, TestStatus, Skill, FileArtifact
+from uroboros.actor.agent import UroborosActor
 from uroboros.adversary.generator import InfCodeAdversary
 from uroboros.arbiter.sandbox import E2BArbiter
 from uroboros.memory.skills import VoyagerMemory
@@ -16,7 +16,7 @@ from uroboros.memory.skills import VoyagerMemory
 logger = setup_logger("uroboros", json_format=False)
 settings = get_settings()
 
-class uroborosEngine:
+class OuroborosEngine:
     """
     The Main Loop Orchestrator.
     Manages the lifecycle: Generate -> Solve -> Attack -> Verify -> Evolve.
@@ -24,7 +24,7 @@ class uroborosEngine:
 
     def __init__(self):
         self.memory = VoyagerMemory()
-        self.actor = uroborosActor(memory=self.memory)
+        self.actor = UroborosActor(memory=self.memory)
         self.adversary = InfCodeAdversary()
         self.arbiter = E2BArbiter()
         self.max_retries = 3
@@ -43,12 +43,17 @@ class uroborosEngine:
             task = await self.adversary.generate_curriculum(difficulty_level=5)
             logger.info(f"🚀 Starting Autonomous Task: {task.id}")
 
+        # LOGGING: Save the Task Definition
+        save_debug_artifact(
+            task.id,
+            "task_definition",
+            f"Description: {task.description}\nRequirements: {task.requirements}",
+            "txt"
+        )
+
         # --- PHASE 2: The Loop (Solve & Verify) ---
         success = False
         attempts = 0
-        
-        # We maintain a 'conversation history' or 'feedback buffer' here
-        # In a real implementation, this would be appended to the Task requirements
         previous_feedback = ""
 
         while attempts < self.max_retries and not success:
@@ -70,20 +75,29 @@ class uroborosEngine:
                 adversarial_tests = await self.adversary.generate_adversarial_tests(solution)
 
             # C. Arbiter Verifies
-            # We must convert patches to actual files for the sandbox
-            # For this MVP, we assume the patches contain the full file content or valid diffs
-            # In a full implementation, we'd need a 'PatchApplier' utility.
-            # Here we naively map patches to FileArtifacts for simplicity.
+            # 1. Clean and Prepare Source Files
             source_files = [
-                # In reality, you apply the diff to the original file. 
-                # This assumes 'diff' is the full file content for MVP.
-                type(task.initial_files[0])(file_path=p.file_path, content=p.diff, language="python") 
+                FileArtifact(
+                    file_path=p.file_path, 
+                    content=clean_code_block(p.diff), 
+                    language="python"
+                ) 
                 for p in solution.patches
+            ]
+
+            # 2. Clean and Prepare Test Files
+            clean_test_files = [
+                FileArtifact(
+                    file_path=t.file_path,
+                    content=clean_code_block(t.content),
+                    language="python"
+                )
+                for t in adversarial_tests
             ]
 
             result = await self.arbiter.execute(
                 files=source_files, 
-                test_files=adversarial_tests
+                test_files=clean_test_files
             )
 
             logger.info(f"Arbiter Verdict: {result.status.upper()}")
@@ -93,42 +107,63 @@ class uroborosEngine:
                 logger.info("✅ Solution Verified against Adversarial Tests.")
                 
                 # --- PHASE 3: Evolution (Memory Consolidation) ---
-                # Save the winning move to the Skill Library
+                
+                # 1. Save to Memory (Vector DB)
+                final_code = source_files[0].content
                 new_skill = Skill(
                     name=f"skill_{task.id[:8]}",
-                    code=solution.patches[0].diff, # Naive: saving the first patch as the skill
+                    code=final_code, 
                     docstring=f"Solution for: {task.description}",
                     tags=["verified", "auto-generated"]
                 )
                 await self.memory.store_skill(new_skill)
+
+                # 2. LOGGING: Save Final Artifacts (Always saved, even if DEBUG=False)
+                save_debug_artifact(task.id, "final_solution_code", final_code, "py")
+                save_debug_artifact(task.id, "final_solution_skill", new_skill.model_dump_json(indent=2), "json")
                 
             else:
-                logger.warning(f"❌ Verification Failed.\nStderr: {result.stderr[:200]}...")
-                previous_feedback = f"Test Failed with stderr: {result.stderr}"
+                # FAILURE HANDLING
+                logger.warning(f"❌ Verification Failed.")
+                
+                # Combine stdout and stderr for the feedback loop
+                # Pytest output is mostly in stdout
+                feedback_content = f"STDOUT:\n{result.stdout}\n\nSTDERR:\n{result.stderr}"
+                previous_feedback = f"Test Failed. Output:\n{feedback_content}"
+                
+                # LOGGING: Save the FULL failure log (stdout + stderr)
+                save_debug_artifact(
+                    task.id, 
+                    f"attempt_{attempts}_failure_log", 
+                    feedback_content, 
+                    "log"
+                )
 
         if success:
             logger.info("🏆 Cycle Complete: SUCCESS")
         else:
             logger.error("💀 Cycle Complete: FAILED (Max Retries Exceeded)")
+            # LOGGING: Save final failure state
+            save_debug_artifact(task.id, "final_status", "FAILED", "txt")
 
 async def main():
-    parser = argparse.ArgumentParser(description="uroboros: Adversarial Software Agent")
+    parser = argparse.ArgumentParser(description="Ouroboros: Adversarial Software Agent")
     parser.add_argument("--task", type=str, help="Specific task description to solve")
     parser.add_argument("--loop", action="store_true", help="Run in continuous autonomous mode")
     args = parser.parse_args()
 
-    engine = uroborosEngine()
+    engine = OuroborosEngine()
 
     if args.loop:
         logger.info("Starting Infinite Autonomous Loop...")
         while True:
             try:
                 await engine.run_cycle()
-                await asyncio.sleep(5) # Breathe
+                await asyncio.sleep(5) 
             except KeyboardInterrupt:
                 break
             except Exception as e:
-                logger.error(f"Loop Error: {e}")
+                logger.error(f"Loop Error: {e}", exc_info=True)
                 await asyncio.sleep(10)
     else:
         # Single run
@@ -139,5 +174,5 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        logger.info("Shutting down uroboros.")
+        logger.info("Shutting down Ouroboros.")
         sys.exit(0)

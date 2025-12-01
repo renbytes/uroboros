@@ -23,9 +23,9 @@ class Settings(BaseSettings):
     
     # --- Model Selection ---
     # Allows hot-swapping models via ENV vars without code changes
-    ACTOR_MODEL: str = "gpt-4-turbo"
-    ADVERSARY_MODEL: str = "gpt-4-turbo" 
-    EVOLVER_MODEL: str = "gpt-4-turbo"
+    ACTOR_MODEL: str = "gpt-5-mini"
+    ADVERSARY_MODEL: str = "gpt-5-mini" 
+    EVOLVER_MODEL: str = "gpt-5-mini"
 
     # --- Infrastructure Credentials ---
     E2B_API_KEY: SecretStr = Field(..., description="API Key for E2B Sandboxes")

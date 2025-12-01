@@ -15,6 +15,7 @@ tenacity = "^8.2.0"
 e2b-code-interpreter = "^1.0.0"  # Sandbox Infrastructure
 chromadb = "^0.4.22" # Vector Database for Memory
 tiktoken = "^0.6.0" # Token counting (dependency of OpenAI/Chroma)
+numpy = "<2.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
