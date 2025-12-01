@@ -11,7 +11,7 @@
 
 > [Uroboros](https://en.wikipedia.org/wiki/Ouroboros) is an ancient image of a snake eating itself, representing the core behavior of this system: code that writes itself, and critiques itself in a recursive loop.
 
-## 🧠 Core Architecture
+## Core Architecture
 
 The system operates on the **Uroboros Loop**:
 
@@ -20,7 +20,7 @@ The system operates on the **Uroboros Loop**:
 3. **Arbiter (The Judge):** Runs the code and tests in a secure, isolated **Firecracker MicroVM** (via [E2B](https://github.com/e2b-dev/E2B)). It provides the ground truth signal (Pass/Fail/Crash).
 4. **Evolver (The Optimizer):** Analyzes failure patterns and rewrites the system prompts to improve future performance.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -69,7 +69,7 @@ poetry run python scripts/smoke_test.py
 
 **Expected Output:** 🎉 Infrastructure is HEALTHY.
 
-## 🛠️ Usage
+## Usage
 
 ### Run a Single Task
 
@@ -87,7 +87,7 @@ To let the agent generate its own curriculum and evolve indefinitely:
 poetry run python -m uroboros.main --loop
 ```
 
-## 🔍 Debugging & Artifacts
+## Debugging & Artifacts
 
 If `DEBUG=true` is set in your `.env`, the system saves detailed artifacts for every step of the loop in:
 
@@ -104,7 +104,7 @@ Files generated:
 * `_adversary_test_code_X.py`: The generated "Killer Tests".
 * `_attempt_X_failure_log.log`: Combined stdout/stderr from the sandbox failure.
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -138,7 +138,7 @@ Files generated:
 
 **Fix:** The codebase now strictly uses `AsyncSandbox.create()` and `sandbox.commands.run()`.
 
-## 🧪 Testing
+## Testing
 
 To run the internal unit and integration tests for the agent framework itself:
 
@@ -150,6 +150,6 @@ poetry run pytest
 poetry run pytest tests/integration/test_llm_connectivity.py
 ```
 
-## 📜 License
+## License
 
 MIT License.
